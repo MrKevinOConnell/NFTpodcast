@@ -50,6 +50,7 @@ const Home: NextPage = () => {
               await ffmpeg.FS('writeFile',`${i}.mp3`,await fetchFile(file));
               await ffmpeg.run('-ss',start.toString(),'-to',end.toString(),'-i',`audio.mp3`,`output${i}.mp3`);
               const output = ffmpeg.FS("readFile", `output${i}.mp3`);
+              ffmpeg.exit()
               console.log("OUTPUT!",output)
               newFiles = [...newFiles,output];
               start = end
@@ -58,7 +59,7 @@ const Home: NextPage = () => {
               }
               console.log("FILES ARE!",newFiles)
               setFiles(newFiles)
-              process.exit(0);
+    
             })();
         
             // example 12.3234 seconds
