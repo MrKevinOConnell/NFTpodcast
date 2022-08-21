@@ -43,8 +43,9 @@ const Home: NextPage = () => {
               let start = 0
               let end = duration
               let i = 0
+              await ffmpeg.load();
               while(end < audio.duration) {
-            await ffmpeg.load();
+
                   
               ffmpeg.FS('writeFile',`${i}.mp3`,await fetchFile(audio.src));
               try {
