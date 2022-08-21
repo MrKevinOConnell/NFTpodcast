@@ -43,14 +43,18 @@ const Home: NextPage = () => {
               let start = 0
               let end = duration
               let i = 0
-              const done = new Uint8Array(audio.src as any)
               while(end < audio.duration) {
             await ffmpeg.load();
                   
-              await ffmpeg.FS('writeFile',`${i}.mp3`,await fetchFile(audio.src));
-              await ffmpeg.run('-ss',start.toString(),'-to',end.toString(),'-i',`audio.mp3`,`${i}.mp3`);
+              ffmpeg.FS('writeFile',`${i}.mp3`,await fetchFile(audio.src));
+              try {
+              await ffmpeg.run('-ss',start.toString(),'-to',end.toString(),'-i',`${file.name}`,`${i}.mp3`);
+              }
+              catch(e) {
+                  console.log("e",e)
+              }
               const output = ffmpeg.FS("readFile", `${i}.mp3`);
-              ffmpeg.exit()
+           
               console.log("OUTPUT!",output)
               newFiles = [...newFiles,output];
               start = end
@@ -58,6 +62,7 @@ const Home: NextPage = () => {
               i = i + 1;
               }
               console.log("FILES ARE!",newFiles)
+              ffmpeg.exit()
               setFiles(newFiles)
     
             })();
