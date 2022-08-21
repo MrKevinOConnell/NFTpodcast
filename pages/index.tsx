@@ -100,8 +100,8 @@ const Home: NextPage = () => {
                 <input type="submit" value="Upload" disabled={isLoading} onClick={handleOnClick} />
                 {isLoading && ` Wait, please...`}
                 {files.length && 
-                 files.map((file: any) => {return (
-                <audio src={file} />)})}
+                 files.map((file: any,i: number) => {return (
+                <audio key={i} src={file} />)})}
             </div>
             </div>
     )
