@@ -20,7 +20,7 @@ const Home: NextPage = () => {
     let start = 0
     let end = finalDuration
     let i = 0
-    const ffmpeg = createFFmpeg({log: true });
+    const ffmpeg = createFFmpeg({corePath: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js',log: true });
     const video = await getVideo(src)
     while(end < finalDuration) {
     (async () => {
@@ -58,6 +58,7 @@ const Home: NextPage = () => {
      const blob = new Blob([output.buffer]);
      const url = await URL.createObjectURL(blob)
     urls = [...urls,url]
+
       })()
       console.log("URLS",urls)
       return urls
