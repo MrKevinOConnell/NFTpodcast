@@ -6,14 +6,68 @@ import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg'
 const Home: NextPage = () => {
     const [isLoading, setIsLoading] = React.useState(false);
     const [files,setFiles] = useState([] as any)
-
+    const [paused,setIsPaused] = useState([] as boolean[])
     const inputFileRef = React.useRef<HTMLInputElement | null>(null);
-    
+    const getVideo = async (vid: any) => {
+        const video = await fetchFile(
+          vid
+        );
+        return video;
+      };
+   const renderClips = async(duration: number,src: string, divide: number) => {
+    let urls: string[] = []
+    var finalDuration = duration / divide
+    let start = 0
+    let end = finalDuration
+    let i = 0
+    const ffmpeg = createFFmpeg({log: true });
+    const video = await getVideo(src)
+    while(end < finalDuration) {
+    (async () => {
+        await ffmpeg.load();
+        ffmpeg.FS('writeFile',`${i}.mp3`,video);
+        try {
+        await ffmpeg.run('-ss',start.toString(),'-to',end.toString(),'-i',`${src}`,`${i}.mp3`);
+        }
+        catch(e) {
+            console.log("e",e)
+        }
+        const output = ffmpeg.FS("readFile",`${i}.mp3`);
+        
+     const blob = new Blob([output.buffer]);
+     const url = await URL.createObjectURL(blob)
+   
+    urls = [...urls,url]
+    console.log("URLS",urls)
+    start = end
+    end += finalDuration
+    i += 1
+      })()
+    }
+    (async () => {
+        await ffmpeg.load();
+        ffmpeg.FS('writeFile',`${i}.mp3`,await fetchFile(src));
+        try {
+        await ffmpeg.run('-ss',start.toString(),'-to',duration.toString(),'-i',`${src}`,`${i}.mp3`);
+        }
+        catch(e) {
+            console.log("e",e)
+        }
+        const output = ffmpeg.FS("readFile", `${i}.mp3`);
+        
+     const blob = new Blob([output.buffer]);
+     const url = await URL.createObjectURL(blob)
+    urls = [...urls,url]
+      })()
+      console.log("URLS",urls)
+      return urls
+   }
     const handleOnClick = async (e: React.MouseEvent<HTMLInputElement>) => {
-        const ffmpeg = createFFmpeg({corePath: 'https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js',log: true });
+        let audio = document.createElement('audio');
+       
         /* Prevent form from submitting by default */
         e.preventDefault();
-        let audio = document.createElement('audio');
+      
         /* If file is not selected, then show alert message */
         if (!inputFileRef.current?.files?.length) {
             alert('Please, select file you want to upload');
@@ -24,7 +78,7 @@ const Home: NextPage = () => {
 
         /* Add files to FormData */
         const formData = new FormData();
-        Object.values(inputFileRef.current.files).forEach(file => {
+        Object.values(inputFileRef.current.files).forEach(async file => {
           var reader = new FileReader();
           reader.readAsDataURL(file)
           const mb = file.size * 10 **-6
@@ -32,76 +86,31 @@ const Home: NextPage = () => {
         
           reader.onloadend = (e) => {
           audio.src = reader.result as any;
-          audio.addEventListener('loadedmetadata', function(){
+          audio.addEventListener('loadedmetadata', async function() {
             // Obtain the duration in seconds of the audio file (with milliseconds as well, a float value)
-            var duration = audio.duration / divide
-            
-           
-            let newFiles: any[] = [];
-            (async () => {
           
-              let start = 0
-              let end = duration
-              let i = 0
-              await ffmpeg.load();
-              while(end < audio.duration) {
+         
+            try {
+           const urls = await Promise.resolve(renderClips(audio.duration,audio.src,divide))
+            setFiles(urls)
 
-                  
-              ffmpeg.FS('writeFile',`${i}.mp3`,await fetchFile(audio.src));
-              try {
-              await ffmpeg.run('-ss',start.toString(),'-to',end.toString(),'-i',`${file.name}`,`${i}.mp3`);
-              }
-              catch(e) {
-                  console.log("e",e)
-              }
-              const output = ffmpeg.FS("readFile", `${i}.mp3`);
-              console.log("OUTPUT!",output)
-              newFiles = [...newFiles,output];
-              start = end
-              end += duration
-              i = i + 1;
-              }
-              ffmpeg.FS('writeFile',`${i}.mp3`,await fetchFile(audio.src));
-              try {
-              await ffmpeg.run('-ss',start.toString(),'-to',audio.duration.toString(),'-i',`${file.name}`,`${i}.mp3`);
-              }
-              catch(e) {
-                  console.log("e",e)
-              }
-              const output = ffmpeg.FS("readFile", `${i}.mp3`);
-              newFiles = [...newFiles,output];
-              console.log("FILES ARE!",newFiles)
-              setFiles(newFiles)
-            })();
-        
+            setIsLoading(false); 
+        }
+        catch(e) {
+            console.log(e)
+        }
             // example 12.3234 seconds
-            console.log("The duration of the song is of: " + duration + "minutes");
             // Alternatively, just display the integer value with
             // parseInt(duration)
             // 12 seconds
         },false);
           }
-            formData.append('file', file);
         })
 
         /* Send request to our api route */
-        const response = await fetch('/api/upload', {
-            method: 'POST',
-            body: formData
-        });
 
-        const body = await response.json() as { status: 'ok' | 'fail', message: string };
 
-        alert(body.message);
-
-        if (body.status === 'ok') {
-            inputFileRef.current.value = '';
-            // Do some stuff on successfully upload
-        } else {
-            // Do some stuff on error
-        }
-
-        setIsLoading(false);
+      
     };
 
     return (
@@ -112,9 +121,18 @@ const Home: NextPage = () => {
             <div>
                 <input type="submit" value="Upload" disabled={isLoading} onClick={handleOnClick} />
                 {isLoading && ` Wait, please...`}
-                {files.length && 
-                 files.map((file: any,i: number) => {return (
-                <audio key={i} src={file} />)})}
+                {files.length && files.map((file: any,i: number) => {  
+                const audio = new Audio(file);
+            
+                  return (
+                    <div key={i}>
+                    <button onClick={() => {
+                        paused[i] ? audio.play() : audio.pause()
+                        let pause = [...paused]
+                        pause[i] = !paused[i]
+                        setIsPaused(pause)
+                        }}>{`Play clip ${i}`}</button>
+                  </div>)})}
             </div>
             </div>
     )
