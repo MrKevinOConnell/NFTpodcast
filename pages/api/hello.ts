@@ -1,13 +1,18 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from 'next'
-
-type Data = {
-  name: string
-}
-
+import fs from 'fs'
+import path from 'path'
+ 
+const filePath = path.resolve('.', 'public/static/audio.mp3')
+const imageBuffer = fs.readFileSync(filePath)
 export default function handler(
   req: NextApiRequest,
-  res: NextApiResponse<Data>
+  res: NextApiResponse<any>
 ) {
-  res.status(200).json({ name: 'John Doe' })
+  
+ 
+  
+
+  res.setHeader('Content-Type', 'audio/mp3')
+  res.send(imageBuffer)
 }
