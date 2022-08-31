@@ -1,12 +1,13 @@
 ## Getting Started
 - install node -> https://nodejs.org/en/download/
-- install yarn -> npm install --global yarn
-- run yarn
+- install yarn -> `npm install --global yarn`
+- run yarn -> `yarn`
 - (if on mac, install homebrew https://brew.sh/)
 - brew install postgresql
 - brew services start postgresql
 - psql postgres
 - CREATE DATABASE nft;
+- (not sure how to setup postgres on non mac device)
 
 To run the development server:
 
