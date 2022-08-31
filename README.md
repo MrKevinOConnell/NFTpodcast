@@ -1,12 +1,16 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
-
 ## Getting Started
+- install node -> https://nodejs.org/en/download/
+- install yarn -> npm install --global yarn
+- run yarn
+- (if on mac, install homebrew https://brew.sh/)
+- brew install postgresql
+- brew services start postgresql
+- psql postgres
+- CREATE DATABASE nft;
 
-First, run the development server:
+To run the development server:
 
 ```bash
-npm run dev
-# or
 yarn dev
 ```
 
